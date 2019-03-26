@@ -11,8 +11,9 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, SUPPORT_PLAY,SUPPORT_PLAY_MEDIA, SUPPORT_STOP)
-from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PLAYING,
-    STATE_PAUSED)
+from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
+    STATE_PLAYING, STATE_PAUSED)
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.util.json import load_json, save_json
 
@@ -36,6 +37,11 @@ SUPPORT_SONY = SUPPORT_PAUSE | \
                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
                  SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -54,7 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host_ip, host_config = sony_config.popitem()
         if host_ip == host:
             device = SonyDevice.load_from_json(host_config['device'])
-            hass_device = SonyMediaPlayerDevice(host, device.nickname, device.pin, device.mac)
+            hass_device = SonyMediaPlayerDevice(
+                host, device.nickname, device.pin, device.mac)
             hass_device.sonydevice = device
             add_devices([hass_device])
             return
@@ -79,7 +86,7 @@ def setup_sonymediaplayer(config, pin, hass, add_devices):
             _LOGGER.info("Discovery configuration done")
 
         hass_device = SonyMediaPlayerDevice(host, name, pin)
-        
+
         # Save config, we need the mac address to support wake on LAN
         save_json(
             hass.config.path(SONY_CONFIG_FILE), {host: {
@@ -112,7 +119,7 @@ def request_configuration(config, hass, add_devices):
         auth_mode = sony_device.get_action("register").mode
         authenticated = False
 
-        # make sure we only send the authentication to the device 
+        # make sure we only send the authentication to the device
         # if we have a valid pin
         if pin == '0000' or pin is None or pin == '':
             register_result = sony_device.register()
@@ -120,7 +127,7 @@ def request_configuration(config, hass, add_devices):
                 authenticated = True
             elif register_result == AuthenicationResult.PIN_NEEDED:
                 # return so next call has the correct pin
-                return 
+                return
             else:
                 _LOGGER.error("An unknown error occured during registration")
 
@@ -142,7 +149,7 @@ def request_configuration(config, hass, add_devices):
         submit_caption="Confirm",
         fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
     )
-    
+
 
 
 class SonyMediaPlayerDevice(MediaPlayerDevice):
@@ -177,7 +184,7 @@ class SonyMediaPlayerDevice(MediaPlayerDevice):
         if not self.sonydevice.get_power_status():
             self._state = STATE_OFF
             return
-        else: 
+        else:
             self._state = STATE_ON
 
         # Retrieve the latest data.

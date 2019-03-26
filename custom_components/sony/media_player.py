@@ -4,7 +4,9 @@ Support for interface with a Sony MediaPlayer TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.braviatv/
 """
+import functools
 import logging
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)

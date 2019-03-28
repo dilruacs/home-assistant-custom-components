@@ -133,6 +133,8 @@ def request_configuration(config, hass, add_devices):
             else:
                 _LOGGER.error("An unknown error occured during registration")
 
+        _LOGGER.debug("auth_mode: %d - pin: %s", auth_mode, pin)
+
         # devices below version 3 do not require a pin.
         if auth_mode > 3:
             authenticated = sony_device.send_authentication(pin)
